@@ -12,6 +12,7 @@
     "arangojs": "^6.2.4",
     "mongodb": "^3.0.10",
     "mongodb-bluebird": "^0.1.2",
+    "rethinkdb": "^2.3.3",
     "step": "^1.0.0"
   }
 }

@@ -44,7 +44,6 @@ mongo.connect("mongodb://localhost:27017/test").then(async function(db) {
           foreignField: '_id',
           as: 'books'
       }}],{
-        $out: 'out'
       })
     console.log(JSON.stringify(result, '', 2))
 });

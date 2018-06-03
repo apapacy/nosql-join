@@ -6,12 +6,19 @@ db.useDatabase("test");
 db.useBasicAuth("test", "test");
 const author = db.collection('author')
 const book = db.collection('book')
-const bookauthor = db.collection('bookauthor')
+const bookauthor = db.edgeCollection('bookauthor')
 
 void async function() {
-  await author.truncate();
-  await book.truncate();
-  await bookauthor.truncate();
+  try {
+    await author.drop();
+    await book.drop();
+    await bookauthor.drop();
+  } catch (ex) {
+    console.log(ex)
+  }
+  await author.create();
+  await book.create();
+  await bookauthor.create();
   ['Joe', 'John', 'Jack', 'Jeremy'].map(async (name) =>
     await author.save({name})
   );
@@ -20,20 +27,17 @@ void async function() {
   );
   let Author = await  author.firstExample({ name: 'Joe' });
   let Book = await  book.firstExample({ title: 'Paint' });
-  await bookauthor.save({author: Author._id, book: Book._id})
+  await bookauthor.save({date: 'Some data'}, Author._id, Book._id)
   Author = await  author.firstExample({ name: 'John' });
-  await bookauthor.save({author: Author._id, book: Book._id})
+  await bookauthor.save({date: 'Some data'}, Author._id, Book._id)
   Book = await  book.firstExample({ title: 'Art' });
-  await bookauthor.save({author: Author._id, book: Book._id})
+  await bookauthor.save({date: 'Some data'}, Author._id, Book._id)
   const cursor = await db.query(aql`
     FOR a IN author
-      FOR ba IN bookauthor
-      FILTER a._id == ba.author
-        LET books = (FOR b IN book
-        FILTER b._id == ba.book
-        COLLECT author = a._id INTO books0
-        RETURN {author,books0})
-        SORT a.name
+    LET books = (
+      FOR book_vertex, book_edge IN OUTBOUND a bookauthor
+      RETURN {book_vertex, book_edge}
+    )
     RETURN {a, books}
   `);
   const all = await cursor.all()
