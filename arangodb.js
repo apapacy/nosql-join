@@ -32,14 +32,23 @@ void async function() {
   await bookauthor.save({date: 'Some data'}, Author._id, Book._id)
   Book = await  book.firstExample({ title: 'Art' });
   await bookauthor.save({date: 'Some data'}, Author._id, Book._id)
-  const cursor = await db.query(aql`
+  let cursor = await db.query(aql`
     FOR a IN author
     LET books = (
       FOR book_vertex, book_edge IN OUTBOUND a bookauthor
-      RETURN {book_vertex, book_edge}
+      RETURN book_vertex
     )
-    RETURN {a, books}
+    RETURN {author: a, books}
   `);
-  const all = await cursor.all()
+  let all = await cursor.all()
   console.log(JSON.stringify(all, '', 2))
+  cursor = await db.query(aql`
+    FOR a IN author
+      FOR book_vertex, book_edge IN OUTBOUND a bookauthor
+      COLLECT a1 = a INTO b1
+    RETURN {author: a1, books: b1[*].book_vertex}
+  `);
+  all = await cursor.all()
+  console.log(JSON.stringify(all, '', 2))
+
 }();
